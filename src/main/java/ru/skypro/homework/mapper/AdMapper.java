@@ -24,8 +24,6 @@ public interface AdMapper {
     Ad toAdDto(AdEntity entity);
 
 
-
-
     @Mapping(target = "pk", source = "id")
     @Mapping(target = "authorFirstName", source = "author.firstName")
     @Mapping(target = "authorLastName", source = "author.lastName")

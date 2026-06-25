@@ -46,6 +46,6 @@ public class UserEntity {
     private List<AdEntity> ads = new ArrayList<>();
 
     @OneToMany(mappedBy = "author", fetch = FetchType.LAZY)
-    private List<Comment> comments = new ArrayList<>();
+    private List<CommentEntity> comments = new ArrayList<>();
 
 }
