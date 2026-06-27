@@ -24,7 +24,7 @@ public interface CommentMapper {
     @Mapping(target = "pk", source = "id")
     @Mapping(target = "author", source = "author.id")
     @Mapping(target = "authorFirstName", source = "author.firstName")
-    @Mapping(target = "authorImage", source = "author.image")
+    @Mapping(target = "authorImage", expression = "java(entity.getAuthor().getImage() != null ? \"/images/\" + entity.getAuthor().getImage() : null)")
     Comment toCommentDto(CommentEntity entity);
 
     //Как клиент обновляет объект? → DTO → Entity (существующий) CreateOrUpdateComment

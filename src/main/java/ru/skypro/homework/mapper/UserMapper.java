@@ -20,6 +20,7 @@ public interface UserMapper {
 
 //Как клиент получает объект? → Entity → DTO - UserEntity
 
+    @Mapping(target = "image", expression = "java(entity.getImage() != null ? \"/images/\" + entity.getImage() : null)")
     User toUserDto(UserEntity entity);
 
 

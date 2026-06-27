@@ -1,18 +1,16 @@
 openapi: 3.0.3
-# Информация о проекте
 info:
   title: API Documentation
   version: '1.0'
 servers:
   - url: http://localhost:8080
-# Описание всех путей(URL)
 paths:
   /users/set_password:
     post:
       tags:
         - Пользователи
       summary: 'Обновление пароля'
-      operationId: setPassword # входящие DTO
+      operationId: setPassword
       requestBody:
         content:
           application/json:
@@ -44,7 +42,7 @@ paths:
       tags:
         - Пользователи
       summary: 'Обновление информации об авторизованном пользователе'
-      operationId: updateUser # входящие DTO
+      operationId: updateUser
       requestBody:
         content:
           application/json:
@@ -64,7 +62,7 @@ paths:
       tags:
         - Пользователи
       summary: 'Обновление аватара авторизованного пользователя'
-      operationId: updateUserImage # входящие DTO
+      operationId: updateUserImage
       requestBody:
         content:
           multipart/form-data:
@@ -87,7 +85,7 @@ paths:
       tags:
         - Регистрация
       summary: 'Регистрация пользователя'
-      operationId: register # входящие DTO
+      operationId: register
       requestBody:
         content:
           application/json:
@@ -103,7 +101,7 @@ paths:
       tags:
         - Авторизация
       summary: 'Авторизация пользователя'
-      operationId: login # входящие DTO
+      operationId: login
       requestBody:
         content:
           application/json:
@@ -131,7 +129,7 @@ paths:
       tags:
         - Объявления
       summary: 'Добавление объявления'
-      operationId: addAd # входящие DTO
+      operationId: addAd
       requestBody:
         content:
           multipart/form-data:
@@ -184,7 +182,7 @@ paths:
       tags:
         - Комментарии
       summary: 'Добавление комментария к объявлению'
-      operationId: addComment # входящие DTO
+      operationId: addComment
       parameters:
         - name: id
           in: path
@@ -258,7 +256,7 @@ paths:
       tags:
         - Объявления
       summary: 'Обновление информации об объявлении'
-      operationId: updateAds # входящие DTO
+      operationId: updateAds
       parameters:
         - name: id
           in: path
@@ -316,7 +314,7 @@ paths:
       tags:
         - Комментарии
       summary: 'Обновление комментария'
-      operationId: updateComment # входящие DTO
+      operationId: updateComment
       parameters:
         - name: adId
           in: path
@@ -369,7 +367,7 @@ paths:
       tags:
         - Объявления
       summary: 'Обновление картинки объявления'
-      operationId: updateImage # входящие DTO
+      operationId: updateImage
       parameters:
         - name: id
           in: path
@@ -404,7 +402,6 @@ paths:
           description: Unauthorized
         '404':
           description: Not found
-# Описание схем данных(DTO)
 components:
   schemas:
     NewPassword:

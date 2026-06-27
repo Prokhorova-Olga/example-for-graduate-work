@@ -1,5 +1,6 @@
 package ru.skypro.homework.service.impl;
 
+import org.springframework.core.io.Resource;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import ru.skypro.homework.mapper.AdMapper;
 import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.ImageService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +26,13 @@ public class AdServiceImpl implements AdService {
     private final UserRepository userRepository;
     private final AdRepository adRepository;
     private final AdMapper adMapper;
+    private final ImageService imageService;
 
-    public AdServiceImpl(UserRepository userRepository, AdRepository adRepository, AdMapper adMapper) {
+    public AdServiceImpl(UserRepository userRepository, AdRepository adRepository, AdMapper adMapper, ImageService imageService) {
         this.userRepository = userRepository;
         this.adRepository = adRepository;
         this.adMapper = adMapper;
+        this.imageService = imageService;
     }
 
     @Override
@@ -37,7 +41,8 @@ public class AdServiceImpl implements AdService {
         String email = authentication.getName();
         UserEntity userEntity = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
         adEntity.setAuthor(userEntity);
-        adEntity.setImage("placeholder.jpg");
+        String imageName = imageService.saveImage(image);
+        adEntity.setImage(imageName);
         AdEntity savedAd = adRepository.save(adEntity);
         return adMapper.toAdDto(savedAd);
 
@@ -114,5 +119,40 @@ public class AdServiceImpl implements AdService {
         }
     }
 
+    @Override
+    public void updateAdImage(Long id, MultipartFile image, Authentication authentication) {
+        AdEntity adEntity = adRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Объявление с id: " + id + " не найдено"));
+        String email = authentication.getName();
+        UserEntity userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+        boolean isAuthor = adEntity.getAuthor().getId().equals(userEntity.getId());
+        boolean isAdmin = userEntity.getRole() == ADMIN;
+        if (isAuthor || isAdmin) {
+            if (adEntity.getImage() != null && !adEntity.getImage().isBlank()) {
+                imageService.deleteImage(adEntity.getImage());
+            }
+            String newImageName = imageService.saveImage(image);
+            adEntity.setImage(newImageName);
+            AdEntity updatedAdEntity = adRepository.save(adEntity);
+            adMapper.toAdDto(updatedAdEntity);
+        } else {
+            throw new AccessDeniedException("Недостаточно прав для удаления этого объявления");
+        }
+    }
+
+    /**
+     * Метод-обёртка для контроллера
+     * вызывает updateAdImage(Long id, MultipartFile image, Authentication authentication),
+     * а потом загружает и возвращает картинку
+     */
+    @Override
+    public Resource updateAdImageAndReturn(Long id, MultipartFile image, Authentication authentication) {
+        updateAdImage(id, image, authentication);
+        AdEntity adEntity = adRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Объявление не найдено"));
+        return imageService.getImage(adEntity.getImage());
+
+    }
 
 }

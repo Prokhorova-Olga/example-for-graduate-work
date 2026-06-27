@@ -3,18 +3,31 @@ package ru.skypro.homework.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.*;
+import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.CommentService;
 
-import java.util.Collections;
 
 @RestController
 @RequestMapping("/ads")
+@CrossOrigin(value = "http://localhost:3000")
 public class AdsController {
 
+    private final AdService adService;
+    private final CommentService commentService;
+
+
+    public AdsController(AdService adService, CommentService commentService) {
+        this.adService = adService;
+        this.commentService = commentService;
+    }
 
     @Operation(
             summary = "Получение всех объявлений",
@@ -27,7 +40,8 @@ public class AdsController {
     )
     @GetMapping
     public ResponseEntity<Ads> getAllAds() {
-        return ResponseEntity.ok(new Ads(0, Collections.emptyList()));
+        Ads ads = adService.getAllAds();
+        return ResponseEntity.ok(ads);
 
     }
 
@@ -47,8 +61,10 @@ public class AdsController {
     @PostMapping
     public ResponseEntity<Ad> addAd(
             @RequestPart("properties") CreateOrUpdateAd properties,
-            @RequestPart("image") MultipartFile image) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(new Ad());
+            @RequestPart("image") MultipartFile image,
+            Authentication authentication) {
+        Ad createtedAd = adService.createdAd(properties, image, authentication);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createtedAd);
 
     }
 
@@ -70,8 +86,9 @@ public class AdsController {
             description = "Not found"
     )
     @GetMapping("/{id}")
-    public ResponseEntity<ExtendedAd> getAds(@PathVariable Integer id) {
-        return ResponseEntity.ok(new ExtendedAd());
+    public ResponseEntity<ExtendedAd> getAds(@PathVariable Long id) {
+        ExtendedAd extendedAd = adService.getAdById(id);
+        return ResponseEntity.ok(extendedAd);
     }
 
 
@@ -96,7 +113,8 @@ public class AdsController {
             description = "Not found"
     )
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> removeAd(@PathVariable Integer id) {
+    public ResponseEntity<Void> removeAd(@PathVariable Long id, Authentication authentication) {
+        adService.deleteAd(id, authentication);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
@@ -121,8 +139,9 @@ public class AdsController {
             description = "Not found"
     )
     @PatchMapping("/{id}")
-    public ResponseEntity<Ad> updateAds(@PathVariable Integer id, @RequestBody CreateOrUpdateAd updateAd) {
-        return ResponseEntity.status(HttpStatus.OK).body(new Ad());
+    public ResponseEntity<Ad> updateAds(@PathVariable Long id, @RequestBody CreateOrUpdateAd updateAd, Authentication authentication) {
+        Ad updatedAd = adService.updateAd(id, updateAd, authentication);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedAd);
 
     }
 
@@ -140,8 +159,9 @@ public class AdsController {
             description = "Unauthorized"
     )
     @GetMapping("/me")
-    public ResponseEntity<Ads> getAdsMe() {
-        return ResponseEntity.ok(new Ads(0, Collections.emptyList()));
+    public ResponseEntity<Ads> getAdsMe(Authentication authentication) {
+        Ads adsMe = adService.getAdsMe(authentication);
+        return ResponseEntity.ok(adsMe);
 
     }
 
@@ -167,8 +187,11 @@ public class AdsController {
             description = "Not found"
     )
     @PatchMapping("/{id}/image")
-    public ResponseEntity<Void> updateImage(@PathVariable Integer id, @RequestParam("image") MultipartFile image) {
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public ResponseEntity<Resource> updateImage(@PathVariable Long id, @RequestParam("image") MultipartFile image, Authentication authentication) {
+        Resource resource = adService.updateAdImageAndReturn(id, image, authentication);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(resource);
     }
 
 
@@ -189,8 +212,9 @@ public class AdsController {
             description = "Not found"
     )
     @GetMapping("/{id}/comments")
-    public ResponseEntity<Comments> getComments(@PathVariable Integer id) {
-        return ResponseEntity.ok(new Comments(0, Collections.emptyList()));
+    public ResponseEntity<Comments> getComments(@PathVariable Long id) {
+        Comments comments = commentService.getCommentsByAdId(id);
+        return ResponseEntity.ok(comments);
     }
 
 
@@ -211,8 +235,9 @@ public class AdsController {
             description = "Not found"
     )
     @PostMapping("/{id}/comments")
-    public ResponseEntity<Comment> addComment(@PathVariable Integer id, @RequestBody CreateOrUpdateComment comment) {
-        return ResponseEntity.status(HttpStatus.OK).body(new Comment());
+    public ResponseEntity<Comment> addComment(@PathVariable Long id, @RequestBody CreateOrUpdateComment comment, Authentication authentication) {
+        Comment createdComment = commentService.createComment(id, comment, authentication);
+        return ResponseEntity.status(HttpStatus.OK).body(createdComment);
     }
 
 
@@ -237,7 +262,8 @@ public class AdsController {
             description = "Not found"
     )
     @DeleteMapping("/{adId}/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Integer adId, @PathVariable Integer commentId) {
+    public ResponseEntity<Void> deleteComment(@PathVariable Long adId, @PathVariable Long commentId, Authentication authentication) {
+        commentService.deleteComment(commentId, authentication);
         return ResponseEntity.status(HttpStatus.OK).build();
 
     }
@@ -264,8 +290,12 @@ public class AdsController {
             description = "Not found"
     )
     @PatchMapping("/{adId}/comments/{commentId}")
-    public ResponseEntity<Comment> updateComment(@PathVariable Integer adId, @PathVariable Integer commentId, @RequestBody CreateOrUpdateComment comment) {
-        return ResponseEntity.ok(new Comment());
+    public ResponseEntity<Comment> updateComment(@PathVariable Long adId,
+                                                 @PathVariable Long commentId,
+                                                 @RequestBody CreateOrUpdateComment comment,
+                                                 Authentication authentication) {
+        Comment updatedComment = commentService.updateComment(commentId, comment, authentication);
+        return ResponseEntity.ok(updatedComment);
     }
 
 }
